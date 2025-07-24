@@ -204,12 +204,13 @@ class Zuzunely_Tables_DB {
         $valid_order = array('ASC', 'DESC');
         $order = in_array(strtoupper($args['order']), $valid_order) ? strtoupper($args['order']) : 'DESC';
         
-        // Consulta SQL básica - CORRIGIDA PARA INCLUIR is_internal
-        $sql = "SELECT t.*, s.name as saloon_name, s.is_internal as saloon_is_internal, s.id as saloon_id
+        // Consulta SQL básica - inclui área do salão
+        $sql = "SELECT t.*, s.name as saloon_name, s.area_id as saloon_area_id, a.name as area_name, s.id as saloon_id
                 FROM {$this->tables_table} t
                 LEFT JOIN {$wpdb->prefix}zuzunely_saloons s ON t.saloon_id = s.id
-                $where_clause 
-                ORDER BY t.$orderby $order 
+                LEFT JOIN {$wpdb->prefix}zuzunely_areas a ON s.area_id = a.id
+                $where_clause
+                ORDER BY t.$orderby $order
                 LIMIT %d, %d";
         
         // Log da consulta SQL para depuração

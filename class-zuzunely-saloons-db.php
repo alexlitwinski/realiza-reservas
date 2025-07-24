@@ -32,7 +32,7 @@ class Zuzunely_Saloons_DB {
             name varchar(255) NOT NULL,
             description text NOT NULL,
             images longtext,
-            is_internal tinyint(1) DEFAULT 1,
+            area_id mediumint(9) NOT NULL,
             is_active tinyint(1) DEFAULT 1,
             created_at datetime DEFAULT CURRENT_TIMESTAMP,
             updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -68,7 +68,7 @@ class Zuzunely_Saloons_DB {
             'name' => sanitize_text_field($data['name']),
             'description' => wp_kses_post($data['description']),
             'images' => $data['images'],
-            'is_internal' => isset($data['is_internal']) ? 1 : 0,
+            'area_id' => intval($data['area_id']),
             'is_active' => isset($data['is_active']) ? 1 : 0,
         );
         
@@ -107,7 +107,7 @@ class Zuzunely_Saloons_DB {
             'name' => sanitize_text_field($data['name']),
             'description' => wp_kses_post($data['description']),
             'images' => $data['images'],
-            'is_internal' => isset($data['is_internal']) ? 1 : 0,
+            'area_id' => intval($data['area_id']),
             'is_active' => isset($data['is_active']) ? 1 : 0,
         );
         
@@ -157,7 +157,10 @@ class Zuzunely_Saloons_DB {
         
         // Buscar do banco de dados
         $saloon = $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM {$this->saloons_table} WHERE id = %d", $id),
+            $wpdb->prepare(
+                "SELECT s.*, a.name as area_name FROM {$this->saloons_table} s LEFT JOIN {$wpdb->prefix}zuzunely_areas a ON s.area_id = a.id WHERE s.id = %d",
+                $id
+            ),
             ARRAY_A
         );
         
@@ -197,14 +200,14 @@ class Zuzunely_Saloons_DB {
         }
         
         // Validar campos de ordenação para evitar injeção SQL
-        $valid_orderby_fields = array('id', 'name', 'is_active', 'is_internal', 'created_at', 'updated_at');
+        $valid_orderby_fields = array('id', 'name', 'is_active', 'area_id', 'created_at', 'updated_at');
         $orderby = in_array($args['orderby'], $valid_orderby_fields) ? $args['orderby'] : 'id';
         
         $valid_order = array('ASC', 'DESC');
         $order = in_array(strtoupper($args['order']), $valid_order) ? strtoupper($args['order']) : 'DESC';
         
         // Consulta SQL básica
-        $sql = "SELECT * FROM {$this->saloons_table} $where ORDER BY {$orderby} {$order} LIMIT %d, %d";
+        $sql = "SELECT s.*, a.name as area_name FROM {$this->saloons_table} s LEFT JOIN {$wpdb->prefix}zuzunely_areas a ON s.area_id = a.id $where ORDER BY s.$orderby $order LIMIT %d, %d";
         
         // Log da consulta SQL para depuração
         error_log('SQL para obter salões: ' . $wpdb->prepare($sql, $args['offset'], $args['number']));

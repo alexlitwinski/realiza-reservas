@@ -625,6 +625,9 @@ class Zuzunely_Frontend_Reservations {
         $max_guests = isset($settings['max_guests_per_reservation']) ? intval($settings['max_guests_per_reservation']) : 12;
         $min_advance_hours = isset($settings['min_advance_time']) ? intval($settings['min_advance_time']) : 2;
         $max_advance_days = isset($settings['max_advance_time']) ? intval($settings['max_advance_time']) : 30;
+
+        $areas_db = new Zuzunely_Areas_DB();
+        $areas = $areas_db->get_areas(['include_inactive' => false, 'number' => 100]);
         
         // CORREÇÃO: Calcular datas min e max dinamicamente
         $min_date = date('Y-m-d');
@@ -700,28 +703,20 @@ class Zuzunely_Frontend_Reservations {
                 <!-- Passo 2: Seleção de Mesa/Área -->
                 <div class="zuzunely-step" data-step="2">
                     <?php if ($selection_mode === 'area'): ?>
-                        <!-- Modo área: escolher área interna/externa -->
+                        <!-- Modo área: escolher entre áreas cadastradas -->
                         <h4><?php _e('Escolha a área de sua preferência', 'zuzunely-restaurant'); ?></h4>
                         <div class="zuzunely-area-selection">
-                            <div class="zuzunely-area-option">
-                                <label>
-                                    <input type="radio" name="area_selection" value="internal" data-area-type="internal">
-                                    <div class="area-card">
-                                        <h5><?php _e('Área Interna', 'zuzunely-restaurant'); ?></h5>
-                                        <p><?php _e('Ambiente climatizado e protegido', 'zuzunely-restaurant'); ?></p>
-                                    </div>
-                                </label>
-                            </div>
-                            
-                            <div class="zuzunely-area-option">
-                                <label>
-                                    <input type="radio" name="area_selection" value="external" data-area-type="external">
-                                    <div class="area-card">
-                                        <h5><?php _e('Área Externa', 'zuzunely-restaurant'); ?></h5>
-                                        <p><?php _e('Ambiente ao ar livre com vista externa', 'zuzunely-restaurant'); ?></p>
-                                    </div>
-                                </label>
-                            </div>
+                            <?php foreach ($areas as $area) : ?>
+                                <div class="zuzunely-area-option">
+                                    <label>
+                                        <input type="radio" name="area_selection" value="<?php echo $area['id']; ?>" data-area-name="<?php echo esc_attr($area['name']); ?>">
+                                        <div class="area-card">
+                                            <h5><?php echo esc_html($area['name']); ?></h5>
+                                            <p><?php echo esc_html(wp_trim_words($area['description'], 15, '...')); ?></p>
+                                        </div>
+                                    </label>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     <?php else: ?>
                         <!-- Outros modos: buscar mesas/salões -->
@@ -1140,14 +1135,13 @@ class Zuzunely_Frontend_Reservations {
     /**
      * Atribuir mesa automaticamente em uma área específica
      */
-    private function auto_assign_table_in_area($area_type, $date, $time, $guests_count, $settings) {
+    private function auto_assign_table_in_area($area_id, $date, $time, $guests_count, $settings) {
         $reservations_db = new Zuzunely_Reservations_DB();
         $available_tables = $reservations_db->get_available_tables($date, $time, $guests_count, false);
-        
-        // Filtrar mesas da área especificada usando o campo is_internal dos salões
-        $area_tables = array_filter($available_tables, function($table) use ($area_type) {
-            $is_internal = ($table['saloon_is_internal'] == 1);
-            return ($area_type === 'internal' && $is_internal) || ($area_type === 'external' && !$is_internal);
+
+        // Filtrar mesas da área especificada
+        $area_tables = array_filter($available_tables, function($table) use ($area_id) {
+            return intval($table['saloon_area_id']) === intval($area_id);
         });
         
         if (empty($area_tables)) {

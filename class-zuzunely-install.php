@@ -13,6 +13,10 @@ class Zuzunely_Install {
      * Criar todas as tabelas necessárias
      */
     public static function create_tables() {
+        // Criar tabela de áreas
+        $areas_db = new Zuzunely_Areas_DB();
+        $areas_db->create_tables();
+
         // Criar tabela de salões
         $saloons_db = new Zuzunely_Saloons_DB();
         $saloons_db->create_tables();
@@ -45,6 +49,10 @@ class Zuzunely_Install {
     public static function verify_tables() {
         global $wpdb;
         
+        // Verificar tabela de áreas
+        $areas_table = $wpdb->prefix . 'zuzunely_areas';
+        $areas_exists = $wpdb->get_var("SHOW TABLES LIKE '$areas_table'") === $areas_table;
+
         // Verificar tabela de salões
         $saloons_table = $wpdb->prefix . 'zuzunely_saloons';
         $saloons_exists = $wpdb->get_var("SHOW TABLES LIKE '$saloons_table'") === $saloons_table;
@@ -62,12 +70,19 @@ class Zuzunely_Install {
         $availability_exists = $wpdb->get_var("SHOW TABLES LIKE '$availability_table'") === $availability_table;
         
         // Log da verificação
-        error_log('Zuzunely: Verificação de tabelas - Salões: ' . ($saloons_exists ? 'Existe' : 'Não existe') . 
-                  ', Mesas: ' . ($tables_exists ? 'Existe' : 'Não existe') . 
+        error_log('Zuzunely: Verificação de tabelas - Áreas: ' . ($areas_exists ? 'Existe' : 'Não existe') .
+                  ', Salões: ' . ($saloons_exists ? 'Existe' : 'Não existe') .
+                  ', Mesas: ' . ($tables_exists ? 'Existe' : 'Não existe') .
                   ', Bloqueios: ' . ($blocks_exists ? 'Existe' : 'Não existe') .
                   ', Disponibilidades: ' . ($availability_exists ? 'Existe' : 'Não existe'));
         
         // Criar tabelas faltantes
+        if (!$areas_exists) {
+            $areas_db = new Zuzunely_Areas_DB();
+            $areas_db->create_tables();
+            error_log('Zuzunely: Tabela de áreas criada');
+        }
+
         if (!$saloons_exists) {
             $saloons_db = new Zuzunely_Saloons_DB();
             $saloons_db->create_tables();
@@ -104,11 +119,12 @@ class Zuzunely_Install {
         }
         
         return array(
+            'areas'   => $areas_exists,
             'saloons' => $saloons_exists,
             'tables' => $tables_exists,
             'blocks' => $blocks_exists,
             'availability' => $availability_exists,
-            'created_now' => !$saloons_exists || !$tables_exists || !$blocks_exists || !$availability_exists
+            'created_now' => !$areas_exists || !$saloons_exists || !$tables_exists || !$blocks_exists || !$availability_exists
         );
     }
     

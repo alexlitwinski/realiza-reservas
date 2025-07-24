@@ -600,10 +600,11 @@ class Zuzunely_Reservations_DB {
         
         Zuzunely_Logger::debug("Buscando mesas disponíveis - Data: {$date}, Hora: {$time}, Pessoas: {$guests_count}, Ignorar regras: " . ($ignore_rules ? 'Sim' : 'Não'));
         
-        // Obter todas as mesas ativas com informação dos salões - CONSULTA CORRIGIDA
-        $tables_sql = "SELECT t.*, s.name as saloon_name, s.is_internal as saloon_is_internal, s.id as saloon_id
+        // Obter todas as mesas ativas com informação dos salões e áreas
+        $tables_sql = "SELECT t.*, s.name as saloon_name, s.area_id as saloon_area_id, a.name as area_name, s.id as saloon_id
                        FROM {$wpdb->prefix}zuzunely_tables t
                        LEFT JOIN {$wpdb->prefix}zuzunely_saloons s ON t.saloon_id = s.id
+                       LEFT JOIN {$wpdb->prefix}zuzunely_areas a ON s.area_id = a.id
                        WHERE t.is_active = 1 AND s.is_active = 1
                        ORDER BY t.name";
         
