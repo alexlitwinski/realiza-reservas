@@ -24,8 +24,10 @@ jQuery(document).ready(function($) {
         // Seleção de área (modo área)
         $(document).on('change', 'input[name="area_selection"]', function() {
             if ($(this).is(':checked')) {
-                var areaType = $(this).val();
-                $('#selected_area').val(areaType);
+                var areaId = $(this).val();
+                var areaName = $(this).data('area-name');
+                $('#selected_area').val(areaId);
+                $('#selected_area').data('area-name', areaName);
                 $('#continue-to-step3').prop('disabled', false);
             }
         });
@@ -438,8 +440,7 @@ jQuery(document).ready(function($) {
         } else if (selectionMode === 'area') {
             var selectedArea = $('input[name="area_selection"]:checked');
             if (selectedArea.length > 0) {
-                var areaType = selectedArea.val();
-                var areaName = areaType === 'internal' ? 'Área Interna' : 'Área Externa';
+                var areaName = selectedArea.data('area-name');
                 summaryHtml += '<p><strong>Área:</strong> ' + areaName + ' (mesa será escolhida automaticamente)</p>';
             } else {
                 summaryHtml += '<p><strong>Local:</strong> Mesa será escolhida automaticamente</p>';
@@ -579,7 +580,7 @@ jQuery(document).ready(function($) {
     function resetForm() {
         $('#zuzunely-frontend-form')[0].reset();
         $('#selected_table_id').val('');
-        $('#selected_area').val('');
+        $('#selected_area').val('').data('area-name', '');
         $('#available-tables-container').html('<p>Use o botão acima para ver as opções disponíveis.</p>');
         $('#continue-to-step3').prop('disabled', true);
         $('#reservation-summary').empty();

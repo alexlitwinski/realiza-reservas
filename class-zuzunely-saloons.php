@@ -165,7 +165,7 @@ class Zuzunely_Saloons {
             'name' => '',
             'description' => '',
             'images' => array(),
-            'is_internal' => 1,
+            'area_id' => 0,
             'is_active' => 1
         );
         
@@ -174,12 +174,15 @@ class Zuzunely_Saloons {
         if ($id > 0) {
             $db = new Zuzunely_Saloons_DB();
             $loaded_saloon = $db->get_saloon($id);
-            
+
             if ($loaded_saloon) {
                 $saloon = $loaded_saloon;
                 $title = __('Editar Salão', 'zuzunely-restaurant');
             }
         }
+
+        $areas_db = new Zuzunely_Areas_DB();
+        $areas = $areas_db->get_areas(['include_inactive' => false, 'number' => 100]);
         
         ?>
         <div class="wrap">
@@ -250,21 +253,16 @@ class Zuzunely_Saloons {
                         
                         <tr>
                             <th scope="row">
-                                <label for="saloon_location"><?php echo esc_html__('Localização', 'zuzunely-restaurant'); ?></label>
+                                <label for="saloon_area_id"><?php echo esc_html__('Área', 'zuzunely-restaurant'); ?></label>
                             </th>
                             <td>
-                                <label>
-                                    <input type="radio" name="saloon_internal" id="saloon_internal_yes" value="1" 
-                                           <?php checked($saloon['is_internal'], 1); ?>>
-                                    <?php echo esc_html__('Área Interna', 'zuzunely-restaurant'); ?>
-                                </label>
-                                <br>
-                                <label>
-                                    <input type="radio" name="saloon_internal" id="saloon_internal_no" value="0" 
-                                           <?php checked($saloon['is_internal'], 0); ?>>
-                                    <?php echo esc_html__('Área Externa', 'zuzunely-restaurant'); ?>
-                                </label>
-                                <p class="description"><?php echo esc_html__('Selecione se o salão fica na área interna ou externa do restaurante.', 'zuzunely-restaurant'); ?></p>
+                                <select name="saloon_area_id" id="saloon_area_id" required>
+                                    <option value=""><?php echo esc_html__('Selecione uma área', 'zuzunely-restaurant'); ?></option>
+                                    <?php foreach ($areas as $area) : ?>
+                                        <option value="<?php echo $area['id']; ?>" <?php selected($saloon['area_id'], $area['id']); ?>><?php echo esc_html($area['name']); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <p class="description"><?php echo esc_html__('Associe o salão a uma área.', 'zuzunely-restaurant'); ?></p>
                             </td>
                         </tr>
                         
@@ -402,7 +400,7 @@ class Zuzunely_Saloons {
         $saloon_name = isset($form_data['saloon_name']) ? sanitize_text_field($form_data['saloon_name']) : '';
         $saloon_description = isset($form_data['saloon_description']) ? wp_kses_post($form_data['saloon_description']) : '';
         $saloon_images = isset($form_data['saloon_images']) ? array_map('intval', $form_data['saloon_images']) : array();
-        $saloon_internal = isset($form_data['saloon_internal']) ? intval($form_data['saloon_internal']) : 1;
+        $saloon_area_id = isset($form_data['saloon_area_id']) ? intval($form_data['saloon_area_id']) : 0;
         $saloon_active = isset($form_data['saloon_active']) ? 1 : 0;
         
         // Validar nome
@@ -415,7 +413,7 @@ class Zuzunely_Saloons {
             'name' => $saloon_name,
             'description' => $saloon_description,
             'images' => $saloon_images,
-            'is_internal' => $saloon_internal,
+            'area_id' => $saloon_area_id,
             'is_active' => $saloon_active
         );
         

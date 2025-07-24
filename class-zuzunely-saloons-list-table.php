@@ -42,7 +42,7 @@ class Zuzunely_Saloons_List_Table extends WP_List_Table {
     public function get_sortable_columns() {
         $sortable_columns = array(
             'name' => array('name', true),
-            'location' => array('is_internal', true),
+            'location' => array('area_id', true),
             'is_active' => array('is_active', true),
             'created_at' => array('created_at', true),
         );
@@ -144,12 +144,8 @@ class Zuzunely_Saloons_List_Table extends WP_List_Table {
     
     // Renderizar coluna de localização
     public function column_location($item) {
-        if (isset($item['is_internal'])) {
-            if ($item['is_internal']) {
-                return '<span class="zuzunely-location zuzunely-location-internal">' . __('Área Interna', 'zuzunely-restaurant') . '</span>';
-            } else {
-                return '<span class="zuzunely-location zuzunely-location-external">' . __('Área Externa', 'zuzunely-restaurant') . '</span>';
-            }
+        if (isset($item['area_name'])) {
+            return esc_html($item['area_name']);
         }
         return '—';
     }
